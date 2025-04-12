@@ -24,10 +24,8 @@ interface PaginationMeta {
 
 export default function Home() {
   const [advocates, setAdvocates] = useState<Advocate[]>([]);
-  const [filteredAdvocates, setFilteredAdvocates] = useState<Advocate[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
-  const [isSearching, setIsSearching] = useState(false);
   
   // Pagination state
   const [paginationMeta, setPaginationMeta] = useState<PaginationMeta>({
@@ -39,13 +37,21 @@ export default function Home() {
     hasPrevPage: false
   });
 
-  const fetchAdvocates = async (page = 1, pageSize = 10) => {
+  const fetchAdvocates = async (page = 1, pageSize = 10, search = "") => {
+   
     try {
-      const response = await fetch(`/api/advocates?page=${page}&pageSize=${pageSize}`);
+      // Build URL with query parameters
+      const url = new URL("/api/advocates", window.location.origin);
+      url.searchParams.append("page", page.toString());
+      url.searchParams.append("pageSize", pageSize.toString());
+      if (search) {
+        url.searchParams.append("search", search);
+      }
+      
+      const response = await fetch(url.toString());
       const jsonResponse = await response.json();
       
       setAdvocates(jsonResponse.data);
-      setFilteredAdvocates(jsonResponse.data);
       setPaginationMeta(jsonResponse.meta);
     } catch (error) {
       console.error("Error fetching advocates:", error);
@@ -56,37 +62,29 @@ export default function Home() {
     fetchAdvocates(paginationMeta.currentPage, paginationMeta.pageSize);
   }, []);
 
+  // Debounce search to avoid too many API calls
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      // Reset to page 1 when searching
+      fetchAdvocates(1, paginationMeta.pageSize, searchTerm);
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm]);
+
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.toLowerCase();
+    const value = e.target.value;
     setSearchTerm(value);
-    setIsSearching(value.length > 0);
-
-    console.log("filtering advocates...");
-    const filteredAdvocates = advocates.filter((advocate) => {
-      return (
-        advocate.firstName.toLowerCase().includes(value) ||
-        advocate.lastName.toLowerCase().includes(value) ||
-        advocate.city.toLowerCase().includes(value) ||
-        advocate.degree.toLowerCase().includes(value) ||
-        advocate.specialties.some((specialty) =>
-          specialty.toLowerCase().includes(value),
-        ) ||
-        advocate.yearsOfExperience.toString().includes(value) ||
-        advocate.phoneNumber.toString().includes(value)
-      );
-    });
-
-    setFilteredAdvocates(filteredAdvocates);
   };
 
   const onReset = () => {
-    setFilteredAdvocates(advocates);
     setSearchTerm("");
-    setIsSearching(false);
+    // Reset search and go back to first page
+    fetchAdvocates(1, paginationMeta.pageSize, "");
   };
 
   const goToPage = (page: number) => {
-    fetchAdvocates(page, paginationMeta.pageSize);
+    fetchAdvocates(page, paginationMeta.pageSize, searchTerm);
   };
 
   const toggleExpand = (id: number) => {
@@ -130,7 +128,7 @@ export default function Home() {
               </div>
               <input
                 className="w-full pl-8 py-2 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue focus:border-blue transition-all text-sm bg-white shadow-sm"
-                placeholder="Search by name, city, specialty..."
+                placeholder="Search by name, city, specialty or anything else..."
                 onChange={onChange}
                 value={searchTerm}
               />
@@ -159,96 +157,102 @@ export default function Home() {
 
         <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
           <div className="overflow-x-auto">
-            <table className="w-full table-auto">
-              <thead className="bg-primary/90 text-white">
-                <tr>
-                  <th className="px-4 py-2 text-left">First Name</th>
-                  <th className="px-4 py-2 text-left">Last Name</th>
-                  <th className="px-4 py-2 text-left">City</th>
-                  <th className="px-4 py-2 text-left">Degree</th>
-                  <th className="px-4 py-2 text-left">Specialties</th>
-                  <th className="px-4 py-2 text-left">Experience</th>
-                  <th className="px-4 py-2 text-left">Phone</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {(isSearching ? filteredAdvocates : advocates).map((advocate, index) => (
-                  <tr
-                    key={advocate.id}
-                    className={`hover:bg-blue-light/10 transition-colors ${index % 2 === 0 ? "bg-background/50" : "bg-white"}`}
-                  >
-                    <td className="px-4 py-3">{advocate.firstName}</td>
-                    <td className="px-4 py-3 font-medium text-primary-dark">
-                      {advocate.lastName}
-                    </td>
-                    <td className="px-4 py-3">{advocate.city}</td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-light/20 text-blue-dark">
-                        {advocate.degree}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      {advocate.specialties.length > 0 && (
-                        <div className="flex flex-col">
-                          {expandedRows.has(advocate.id) ? (
-                            <>
-                              <div className="flex flex-wrap gap-1 mb-1">
-                                {advocate.specialties.map((specialty, i) => (
-                                  <span
-                                    key={i}
-                                    className="inline-block px-2 py-0.5 text-xs font-medium bg-secondary-light text-black rounded-full border border-secondary/30"
-                                    title={specialty}
-                                  >
-                                    {specialty}
-                                  </span>
-                                ))}
-                              </div>
-                              <div className="w-full text-right">
-                                <button
-                                  onClick={() => toggleExpand(advocate.id)}
-                                  className="text-xs text-black hover:text-gray-600 transition-colors mt-1"
-                                >
-                                  Show less
-                                </button>
-                              </div>
-                            </>
-                          ) : (
-                            <div className="flex items-center">
-                              <span
-                                className="inline-block px-2 py-0.5 text-xs font-medium bg-secondary-light text-black rounded-full border border-secondary/30 truncate max-w-[150px] overflow-hidden"
-                                title={advocate.specialties[0]}
-                              >
-                                {advocate.specialties[0]}
-                              </span>
-                              {advocate.specialties.length > 1 && (
-                                <button
-                                  onClick={() => toggleExpand(advocate.id)}
-                                  className="ml-1 text-xs font-medium bg-secondary-light text-black rounded-full border border-secondary/30 px-2 py-0.5 whitespace-nowrap"
-                                >
-                                  +{advocate.specialties.length - 1}
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-primary-light/20 text-primary-dark">
-                        {advocate.yearsOfExperience} years
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-primary">
-                      {advocate.phoneNumber}
-                    </td>
+            {advocates.length === 0 ? (
+              <div className="text-center py-10">
+                <p className="text-gray-500">No advocates found matching your search criteria.</p>
+              </div>
+            ) : (
+              <table className="w-full table-auto">
+                <thead className="bg-primary/90 text-white">
+                  <tr>
+                    <th className="px-4 py-2 text-left">First Name</th>
+                    <th className="px-4 py-2 text-left">Last Name</th>
+                    <th className="px-4 py-2 text-left">City</th>
+                    <th className="px-4 py-2 text-left">Degree</th>
+                    <th className="px-4 py-2 text-left">Specialties</th>
+                    <th className="px-4 py-2 text-left">Experience</th>
+                    <th className="px-4 py-2 text-left">Phone</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {advocates.map((advocate, index) => (
+                    <tr
+                      key={advocate.id}
+                      className={`hover:bg-blue-light/10 transition-colors ${index % 2 === 0 ? "bg-background/50" : "bg-white"}`}
+                    >
+                      <td className="px-4 py-3">{advocate.firstName}</td>
+                      <td className="px-4 py-3 font-medium text-primary-dark">
+                        {advocate.lastName}
+                      </td>
+                      <td className="px-4 py-3">{advocate.city}</td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-light/20 text-blue-dark">
+                          {advocate.degree}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {advocate.specialties.length > 0 && (
+                          <div className="flex flex-col">
+                            {expandedRows.has(advocate.id) ? (
+                              <>
+                                <div className="flex flex-wrap gap-1 mb-1">
+                                  {advocate.specialties.map((specialty, i) => (
+                                    <span
+                                      key={i}
+                                      className="inline-block px-2 py-0.5 text-xs font-medium bg-secondary-light text-black rounded-full border border-secondary/30"
+                                      title={specialty}
+                                    >
+                                      {specialty}
+                                    </span>
+                                  ))}
+                                </div>
+                                <div className="w-full text-right">
+                                  <button
+                                    onClick={() => toggleExpand(advocate.id)}
+                                    className="text-xs text-black hover:text-gray-600 transition-colors mt-1"
+                                  >
+                                    Show less
+                                  </button>
+                                </div>
+                              </>
+                            ) : (
+                              <div className="flex items-center">
+                                <span
+                                  className="inline-block px-2 py-0.5 text-xs font-medium bg-secondary-light text-black rounded-full border border-secondary/30 truncate max-w-[150px] overflow-hidden"
+                                  title={advocate.specialties[0]}
+                                >
+                                  {advocate.specialties[0]}
+                                </span>
+                                {advocate.specialties.length > 1 && (
+                                  <button
+                                    onClick={() => toggleExpand(advocate.id)}
+                                    className="ml-1 text-xs font-medium bg-secondary-light text-black rounded-full border border-secondary/30 px-2 py-0.5 whitespace-nowrap"
+                                  >
+                                    +{advocate.specialties.length - 1}
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-primary-light/20 text-primary-dark">
+                          {advocate.yearsOfExperience} years
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-primary">
+                        {advocate.phoneNumber}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
 
-          {/* Pagination Controls */}
-          {!isSearching && paginationMeta.totalPages > 1 && (
+          {/* Pagination Controls*/}
+          {paginationMeta.totalPages > 1 && (
             <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
               <div className="flex flex-1 justify-between sm:hidden">
                 <button
@@ -277,15 +281,16 @@ export default function Home() {
               <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm text-gray-700">
-                    Showing <span className="font-medium">{(paginationMeta.currentPage - 1) * paginationMeta.pageSize + 1}</span> to{" "}
+                    Showing <span className="font-medium">{advocates.length > 0 ? (paginationMeta.currentPage - 1) * paginationMeta.pageSize + 1 : 0}</span> to{" "}
                     <span className="font-medium">
                       {Math.min(paginationMeta.currentPage * paginationMeta.pageSize, paginationMeta.totalCount)}
                     </span>{" "}
                     of <span className="font-medium">{paginationMeta.totalCount}</span> results
+                    {searchTerm && <span className="italic ml-1"> for "{searchTerm}"</span>}
                   </p>
                 </div>
                 <div>
-                  <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                  <nav className="isolate inline-flex -space-x-px rounded-md" aria-label="Pagination">
                     <button
                       onClick={() => goToPage(paginationMeta.currentPage - 1)}
                       disabled={!paginationMeta.hasPrevPage}
