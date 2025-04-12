@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "format": "npx prettier --write",
     "generate": "drizzle-kit generate",
     "migrate:up": "node ./src/db/migrate.js",
     "seed": "node --loader esbuild-register/loader -r esbuild-register ./src/db/seed/index.ts"
@@ -15,6 +16,7 @@
     "drizzle-orm": "^0.32.1",
     "next": "^14.2.19",
     "postgres": "^3.4.4",
+    "prettier": "^3.5.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
