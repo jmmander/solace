@@ -2,6 +2,7 @@
 
 import { useEffect, useState, ChangeEvent } from "react";
 import Pagination, { PaginationMeta } from "./components/pagination";
+import SearchBar from "./components/searchBar";
 
 interface Advocate {
   id: number;
@@ -101,50 +102,12 @@ export default function Home() {
             </h1>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-            <div className="w-full sm:w-auto flex-1 relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg
-                  className="h-4 w-4 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-              <input
-                className="w-full pl-8 py-2 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue focus:border-blue transition-all text-sm bg-white shadow-sm"
-                placeholder="Search by name, city, specialty or anything else..."
-                onChange={onChange}
-                value={searchTerm}
-              />
-            </div>
-            <button
-              className="whitespace-nowrap px-4 py-2 bg-blue text-white text-sm rounded-md hover:bg-blue-dark transition-colors shadow-sm flex items-center justify-center"
-              onClick={onReset}
-            >
-              <svg
-                className="h-4 w-4 mr-1"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-              Reset
-            </button>
-          </div>
+          <SearchBar 
+            searchTerm={searchTerm}
+            onChange={onChange}
+            onReset={onReset}
+            placeholder="Search by name, city, specialty or anything else..."
+          />
         </div>
 
         <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
