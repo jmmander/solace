@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState, useCallback } from "react";
 import { SearchIcon, ResetIcon } from "./icons";
 
 interface SearchBarProps {
@@ -17,15 +17,21 @@ export default function SearchBar({
   debounceTime = 300
 }: SearchBarProps) {
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
+  const [debouncedTerm, setDebouncedTerm] = useState(initialSearchTerm);
   
-  // Debounce search to avoid too many API calls
+  // Set up the debounce effect
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      onSearch(searchTerm);
+      setDebouncedTerm(searchTerm);
     }, debounceTime);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm, onSearch, debounceTime]);
+  }, [searchTerm, debounceTime]);
+
+  // Only call onSearch when debouncedTerm changes
+  useEffect(() => {
+    onSearch(debouncedTerm);
+  }, [debouncedTerm, onSearch]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -33,7 +39,7 @@ export default function SearchBar({
 
   const handleReset = () => {
     setSearchTerm("");
-    onSearch("");
+    setDebouncedTerm("");
   };
 
   return (

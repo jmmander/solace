@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Pagination, { PaginationMeta } from "./components/pagination";
 import SearchBar from "./components/searchBar";
 
@@ -30,7 +30,7 @@ export default function Home() {
     hasPrevPage: false
   });
 
-  const fetchAdvocates = async (page = 1, pageSize = 10, search = "") => {
+  const fetchAdvocates = useCallback(async (page = 1, pageSize = 10, search = "") => {
     try {
       // Build URL with query parameters
       const url = new URL("/api/advocates", window.location.origin);
@@ -48,24 +48,24 @@ export default function Home() {
     } catch (error) {
       console.error("Error fetching advocates:", error);
     }
-  };
+  }, []);
 
   // Load advocates on first render
   useEffect(() => {
     fetchAdvocates(paginationMeta.currentPage, paginationMeta.pageSize);
-  }, []);
+  }, [fetchAdvocates, paginationMeta.currentPage, paginationMeta.pageSize]);
 
-  const handleSearch = (term: string) => {
+  const handleSearch = useCallback((term: string) => {
     setSearchTerm(term);
     // Reset to page 1 when searching
     fetchAdvocates(1, paginationMeta.pageSize, term);
-  };
+  }, [fetchAdvocates, paginationMeta.pageSize]);
 
-  const goToPage = (page: number) => {
+  const goToPage = useCallback((page: number) => {
     fetchAdvocates(page, paginationMeta.pageSize, searchTerm);
-  };
+  }, [fetchAdvocates, paginationMeta.pageSize, searchTerm]);
 
-  const toggleExpand = (id: number) => {
+  const toggleExpand = useCallback((id: number) => {
     setExpandedRows((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(id)) {
@@ -75,7 +75,7 @@ export default function Home() {
       }
       return newSet;
     });
-  };
+  }, []);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-background to-background-dark p-8">
