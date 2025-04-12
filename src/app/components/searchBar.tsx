@@ -1,21 +1,41 @@
 "use client";
 
-import { ChangeEvent } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { SearchIcon, ResetIcon } from "./icons";
 
 interface SearchBarProps {
-  searchTerm: string;
-  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
-  onReset: () => void;
+  onSearch: (searchTerm: string) => void;
+  initialSearchTerm?: string;
   placeholder?: string;
+  debounceTime?: number;
 }
 
 export default function SearchBar({ 
-  searchTerm, 
-  onChange, 
-  onReset, 
-  placeholder = "Search..." 
+  onSearch, 
+  initialSearchTerm = "", 
+  placeholder = "Search...",
+  debounceTime = 300
 }: SearchBarProps) {
+  const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
+  
+  // Debounce search to avoid too many API calls
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      onSearch(searchTerm);
+    }, debounceTime);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, onSearch, debounceTime]);
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleReset = () => {
+    setSearchTerm("");
+    onSearch("");
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-2 mb-3">
       <div className="w-full sm:w-auto flex-1 relative">
@@ -25,17 +45,19 @@ export default function SearchBar({
         <input
           className="w-full pl-8 py-2 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue focus:border-blue transition-all text-sm bg-white shadow-sm"
           placeholder={placeholder}
-          onChange={onChange}
+          onChange={handleChange}
           value={searchTerm}
         />
       </div>
-      <button
-        className="whitespace-nowrap px-4 py-2 bg-blue text-white text-sm rounded-md hover:bg-blue-dark transition-colors shadow-sm flex items-center justify-center"
-        onClick={onReset}
-      >
-        <ResetIcon className="h-4 w-4 mr-1" />
-        Reset
-      </button>
+      {searchTerm && (
+        <button
+          className="whitespace-nowrap px-4 py-2 bg-blue text-white text-sm rounded-md hover:bg-blue-dark transition-colors shadow-sm flex items-center justify-center"
+          onClick={handleReset}
+        >
+          <ResetIcon className="h-4 w-4 mr-1" />
+          Reset
+        </button>
+      )}
     </div>
   );
 }

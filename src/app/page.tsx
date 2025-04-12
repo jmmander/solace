@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, ChangeEvent } from "react";
+import { useEffect, useState } from "react";
 import Pagination, { PaginationMeta } from "./components/pagination";
 import SearchBar from "./components/searchBar";
 
@@ -31,7 +31,6 @@ export default function Home() {
   });
 
   const fetchAdvocates = async (page = 1, pageSize = 10, search = "") => {
-   
     try {
       // Build URL with query parameters
       const url = new URL("/api/advocates", window.location.origin);
@@ -51,30 +50,15 @@ export default function Home() {
     }
   };
 
-  //dep array is empty to ensure this only runs on first load
+  // Load advocates on first render
   useEffect(() => {
     fetchAdvocates(paginationMeta.currentPage, paginationMeta.pageSize);
   }, []);
 
-  // Debounce search to avoid too many API calls
-  useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      // Reset to page 1 when searching
-      fetchAdvocates(1, paginationMeta.pageSize, searchTerm);
-    }, 300);
-
-    return () => clearTimeout(delayDebounce);
-  }, [searchTerm, paginationMeta.pageSize]);
-
-  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-  };
-
-  const onReset = () => {
-    setSearchTerm("");
-    // Reset search and go back to first page
-    fetchAdvocates(1, paginationMeta.pageSize, "");
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    // Reset to page 1 when searching
+    fetchAdvocates(1, paginationMeta.pageSize, term);
   };
 
   const goToPage = (page: number) => {
@@ -104,9 +88,8 @@ export default function Home() {
           </div>
 
           <SearchBar 
-            searchTerm={searchTerm}
-            onChange={onChange}
-            onReset={onReset}
+            initialSearchTerm={searchTerm}
+            onSearch={handleSearch}
             placeholder="Search by name, city, specialty or anything else..."
           />
         </div>
