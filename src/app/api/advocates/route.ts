@@ -59,31 +59,30 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Database error:", error);
     // Fallback to local data if database query fails
-    if (searchTerm) {
-      const searchTermLower = searchTerm.toLowerCase();
-      const filteredData = advocateData.filter(advocate => 
-        advocate.firstName.toLowerCase().includes(searchTermLower) ||
-        advocate.lastName.toLowerCase().includes(searchTermLower) ||
-        advocate.city.toLowerCase().includes(searchTermLower) ||
-        advocate.degree.toLowerCase().includes(searchTermLower) ||
-        advocate.specialties.some(specialty => 
-          specialty.toLowerCase().includes(searchTermLower)
-        ) ||
-        advocate.yearsOfExperience.toString().includes(searchTermLower) ||
-        advocate.phoneNumber.toString().includes(searchTermLower)
-      );
-      
-      const startIndex = offset;
-      const endIndex = startIndex + pageSize;
-      data = filteredData.slice(startIndex, endIndex);
-      totalCount = filteredData.length;
-    } else {
-      const startIndex = offset;
-      const endIndex = startIndex + pageSize;
-      data = advocateData.slice(startIndex, endIndex);
-      totalCount = advocateData.length;
-    }
+    const filteredData = searchTerm 
+      ? advocateData.filter(advocate => 
+          advocate && (
+            advocate.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            advocate.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            advocate.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            advocate.degree.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            advocate.specialties.some(specialty => 
+              specialty.toLowerCase().includes(searchTerm.toLowerCase())
+            ) ||
+            advocate.yearsOfExperience.toString().includes(searchTerm.toLowerCase()) ||
+            advocate.phoneNumber.toString().includes(searchTerm.toLowerCase())
+          )
+        )
+      : advocateData;
+    
+    const startIndex = offset;
+    const endIndex = startIndex + pageSize;
+    data = filteredData.slice(startIndex, endIndex);
+    totalCount = filteredData.length;
   }
+  
+  // Ensure data is not empty
+  data = data.filter(advocate => !!advocate);
   
   // Calculate total pages
   const totalPages = Math.ceil(totalCount / pageSize);
