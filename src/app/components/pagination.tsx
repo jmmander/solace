@@ -68,7 +68,7 @@ export default function Pagination({ paginationMeta, onPageChange, searchTerm }:
             Showing <span className="font-medium">{startItem}</span> to{" "}
             <span className="font-medium">{endItem}</span>{" "}
             of <span className="font-medium">{paginationMeta.totalCount}</span> results
-            {searchTerm && <span className="italic ml-1"> for "{searchTerm}"</span>}
+            {searchTerm && <span className="italic ml-1"> for &quot;{searchTerm}&quot;</span>}
           </p>
         </div>
         <div>

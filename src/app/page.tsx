@@ -51,6 +51,7 @@ export default function Home() {
     }
   };
 
+  //dep array is empty to ensure this only runs on first load
   useEffect(() => {
     fetchAdvocates(paginationMeta.currentPage, paginationMeta.pageSize);
   }, []);
@@ -63,7 +64,7 @@ export default function Home() {
     }, 300);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm]);
+  }, [searchTerm, paginationMeta.pageSize]);
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
