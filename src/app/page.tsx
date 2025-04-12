@@ -29,17 +29,19 @@ export default function Home() {
   }, []);
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+    const value = e.target.value.toLowerCase();
     setSearchTerm(value);
 
     console.log("filtering advocates...");
     const filteredAdvocates = advocates.filter((advocate) => {
       return (
-        advocate.firstName.includes(value) ||
-        advocate.lastName.includes(value) ||
-        advocate.city.includes(value) ||
-        advocate.degree.includes(value) ||
-        advocate.specialties.includes(value) ||
+        advocate.firstName.toLowerCase().includes(value) ||
+        advocate.lastName.toLowerCase().includes(value) ||
+        advocate.city.toLowerCase().includes(value) ||
+        advocate.degree.toLowerCase().includes(value) ||
+        advocate.specialties.some((specialty) =>
+          specialty.toLowerCase().includes(value)
+        ) ||
         advocate.yearsOfExperience.toString().includes(value) ||
         advocate.phoneNumber.toString().includes(value)
       );
