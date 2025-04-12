@@ -126,14 +126,6 @@ export default function Home() {
               </svg>
               Reset
             </button>
-            {searchTerm && (
-              <div className="flex items-center text-xs text-gray-600">
-                <span className="mr-1">Results for:</span>
-                <span className="font-medium text-blue bg-blue-light/10 px-2 py-0.5 rounded-full">
-                  {searchTerm}
-                </span>
-              </div>
-            )}
           </div>
         </div>
 
