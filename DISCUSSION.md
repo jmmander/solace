@@ -1,0 +1,24 @@
+# DISCUSSION
+
+Thanks for checking out my code!
+
+This project is split across 4 different PRs, each branching off the previous one. I structured it this way to make the code easily testable and review-friendly. For running the application, I recommend using the `clean-up` branch as it contains all the changes and updates.
+
+## Future Improvements
+
+### Backend
+- Add structured error responses with appropriate HTTP status codes
+- Create an index for specialties to improve search performance
+- Implement automated tests
+
+### Frontend
+- Add loading states for better user experience
+- Implement error handling and states
+- Make the table responsive and mobile-friendly
+- Enhance data fetching with ReactQuery or SSR
+- Refactor the table into its own component
+- Add comprehensive frontend tests
+- Ensure it meets accessibilty standards
+
+### Features:
+- Filtering and sorting in the table header
