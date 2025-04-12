@@ -13,25 +13,53 @@ interface Advocate {
   phoneNumber: string;
 }
 
+interface PaginationMeta {
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  totalCount: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
 export default function Home() {
   const [advocates, setAdvocates] = useState<Advocate[]>([]);
   const [filteredAdvocates, setFilteredAdvocates] = useState<Advocate[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+  const [isSearching, setIsSearching] = useState(false);
+  
+  // Pagination state
+  const [paginationMeta, setPaginationMeta] = useState<PaginationMeta>({
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalCount: 0,
+    hasNextPage: false,
+    hasPrevPage: false
+  });
+
+  const fetchAdvocates = async (page = 1, pageSize = 10) => {
+    try {
+      const response = await fetch(`/api/advocates?page=${page}&pageSize=${pageSize}`);
+      const jsonResponse = await response.json();
+      
+      setAdvocates(jsonResponse.data);
+      setFilteredAdvocates(jsonResponse.data);
+      setPaginationMeta(jsonResponse.meta);
+    } catch (error) {
+      console.error("Error fetching advocates:", error);
+    }
+  };
 
   useEffect(() => {
-    console.log("fetching advocates...");
-    fetch("/api/advocates").then((response) => {
-      response.json().then((jsonResponse) => {
-        setAdvocates(jsonResponse.data);
-        setFilteredAdvocates(jsonResponse.data);
-      });
-    });
+    fetchAdvocates(paginationMeta.currentPage, paginationMeta.pageSize);
   }, []);
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toLowerCase();
     setSearchTerm(value);
+    setIsSearching(value.length > 0);
 
     console.log("filtering advocates...");
     const filteredAdvocates = advocates.filter((advocate) => {
@@ -51,10 +79,14 @@ export default function Home() {
     setFilteredAdvocates(filteredAdvocates);
   };
 
-  const onClick = () => {
-    console.log(advocates);
+  const onReset = () => {
     setFilteredAdvocates(advocates);
     setSearchTerm("");
+    setIsSearching(false);
+  };
+
+  const goToPage = (page: number) => {
+    fetchAdvocates(page, paginationMeta.pageSize);
   };
 
   const toggleExpand = (id: number) => {
@@ -77,10 +109,6 @@ export default function Home() {
             <h1 className="text-xl font-bold text-dark">
               Find your Solace Advocate
             </h1>
-            <div className="text-sm text-blue-dark bg-blue-light/20 px-3 py-1 rounded-full">
-              {filteredAdvocates.length}{" "}
-              {filteredAdvocates.length === 1 ? "Advocate" : "Advocates"}
-            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -109,7 +137,7 @@ export default function Home() {
             </div>
             <button
               className="whitespace-nowrap px-4 py-2 bg-blue text-white text-sm rounded-md hover:bg-blue-dark transition-colors shadow-sm flex items-center justify-center"
-              onClick={onClick}
+              onClick={onReset}
             >
               <svg
                 className="h-4 w-4 mr-1"
@@ -144,7 +172,7 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredAdvocates.map((advocate, index) => (
+                {(isSearching ? filteredAdvocates : advocates).map((advocate, index) => (
                   <tr
                     key={advocate.id}
                     className={`hover:bg-blue-light/10 transition-colors ${index % 2 === 0 ? "bg-background/50" : "bg-white"}`}
@@ -218,6 +246,113 @@ export default function Home() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          {!isSearching && paginationMeta.totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+              <div className="flex flex-1 justify-between sm:hidden">
+                <button
+                  onClick={() => goToPage(paginationMeta.currentPage - 1)}
+                  disabled={!paginationMeta.hasPrevPage}
+                  className={`relative inline-flex items-center rounded-md px-4 py-2 text-sm font-medium ${
+                    paginationMeta.hasPrevPage
+                      ? "text-blue-dark hover:bg-gray-50"
+                      : "text-gray-400 cursor-not-allowed"
+                  }`}
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => goToPage(paginationMeta.currentPage + 1)}
+                  disabled={!paginationMeta.hasNextPage}
+                  className={`relative ml-3 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium ${
+                    paginationMeta.hasNextPage
+                      ? "text-blue-dark hover:bg-gray-50"
+                      : "text-gray-400 cursor-not-allowed"
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+              <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-gray-700">
+                    Showing <span className="font-medium">{(paginationMeta.currentPage - 1) * paginationMeta.pageSize + 1}</span> to{" "}
+                    <span className="font-medium">
+                      {Math.min(paginationMeta.currentPage * paginationMeta.pageSize, paginationMeta.totalCount)}
+                    </span>{" "}
+                    of <span className="font-medium">{paginationMeta.totalCount}</span> results
+                  </p>
+                </div>
+                <div>
+                  <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                    <button
+                      onClick={() => goToPage(paginationMeta.currentPage - 1)}
+                      disabled={!paginationMeta.hasPrevPage}
+                      className={`relative inline-flex items-center rounded-l-md px-2 py-2 ${
+                        paginationMeta.hasPrevPage
+                          ? "text-gray-500 hover:bg-gray-50"
+                          : "text-gray-300 cursor-not-allowed"
+                      }`}
+                    >
+                      <span className="sr-only">Previous</span>
+                      <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    
+                    {/* Page Numbers */}
+                    {Array.from({ length: Math.min(5, paginationMeta.totalPages) }, (_, i) => {
+                      // Logic to show pages around current page
+                      let pageNum: number;
+                      if (paginationMeta.totalPages <= 5) {
+                        // If 5 or fewer pages, show all
+                        pageNum = i + 1;
+                      } else if (paginationMeta.currentPage <= 3) {
+                        // If near start, show first 5
+                        pageNum = i + 1;
+                      } else if (paginationMeta.currentPage >= paginationMeta.totalPages - 2) {
+                        // If near end, show last 5
+                        pageNum = paginationMeta.totalPages - 4 + i;
+                      } else {
+                        // Otherwise, show 2 before and 2 after current
+                        pageNum = paginationMeta.currentPage - 2 + i;
+                      }
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => goToPage(pageNum)}
+                          className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
+                            pageNum === paginationMeta.currentPage
+                              ? "z-10 bg-blue text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+                              : "text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-offset-0"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                    
+                    <button
+                      onClick={() => goToPage(paginationMeta.currentPage + 1)}
+                      disabled={!paginationMeta.hasNextPage}
+                      className={`relative inline-flex items-center rounded-r-md px-2 py-2 ${
+                        paginationMeta.hasNextPage
+                          ? "text-gray-500 hover:bg-gray-50"
+                          : "text-gray-300 cursor-not-allowed"
+                      }`}
+                    >
+                      <span className="sr-only">Next</span>
+                      <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </main>
