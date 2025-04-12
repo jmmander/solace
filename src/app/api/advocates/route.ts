@@ -22,22 +22,23 @@ export async function GET(request: NextRequest) {
     let conditions = undefined;
     
     if (searchTerm) {
-      //Specalities is a jsonb array, so we need to search within it
+      // Using sql template literals for proper parameterization
+      // Specialties is a jsonb array, so we need to search within it
       const specialtiesSearch = sql`EXISTS (
         SELECT 1 FROM jsonb_array_elements_text(${advocates.specialties}) as specialty
-        WHERE specialty ILIKE ${`%${searchTerm}%`}
+        WHERE specialty ILIKE ${'%' + searchTerm + '%'}
       )`;
 
       // Create case-insensitive search across multiple columns
+      // Use proper parameterized queries with sql template literals
       conditions = or(
-        ilike(advocates.firstName, `%${searchTerm}%`),
-        ilike(advocates.lastName, `%${searchTerm}%`),
-        ilike(advocates.city, `%${searchTerm}%`),
-        ilike(advocates.degree, `%${searchTerm}%`),
+        sql`${advocates.firstName} ILIKE ${'%' + searchTerm + '%'}`,
+        sql`${advocates.lastName} ILIKE ${'%' + searchTerm + '%'}`,
+        sql`${advocates.city} ILIKE ${'%' + searchTerm + '%'}`,
+        sql`${advocates.degree} ILIKE ${'%' + searchTerm + '%'}`,
         specialtiesSearch,
-        // Add search for numbers by casting to text
-        sql`CAST(${advocates.yearsOfExperience} AS TEXT) LIKE ${`%${searchTerm}%`}`,
-        sql`CAST(${advocates.phoneNumber} AS TEXT) LIKE ${`%${searchTerm}%`}`
+        sql`CAST(${advocates.yearsOfExperience} AS TEXT) ILIKE ${'%' + searchTerm + '%'}`,
+        sql`CAST(${advocates.phoneNumber} AS TEXT) ILIKE ${'%' + searchTerm + '%'}`
       );
     }
 
