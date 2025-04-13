@@ -5,6 +5,7 @@ import Pagination, { PaginationMeta } from "./components/pagination";
 import SearchBar from "./components/searchBar";
 import Loading from "./components/loading";
 import ErrorState from "./components/error";
+import { formatPhoneNumber } from "./utils";
 
 interface Advocate {
   id: number;
@@ -13,7 +14,7 @@ interface Advocate {
   city: string;
   degree: string;
   specialties: string[];
-  yearsOfExperience: string;
+  yearsOfExperience: number;
   phoneNumber: string;
 }
 
@@ -56,7 +57,10 @@ export default function Home() {
       
       const jsonResponse = await response.json();
       
-      setAdvocates(jsonResponse.data);
+      setAdvocates(jsonResponse.data.map((advocate: Advocate) => ({
+        ...advocate,
+        phoneNumber: String(advocate.phoneNumber) // Ensure it's always a string
+      })))
       setPaginationMeta(jsonResponse.meta);
     } catch (error) {
       console.error("Error fetching advocates:", error);
@@ -207,7 +211,7 @@ export default function Home() {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-primary">
-                            {advocate.phoneNumber}
+                            {formatPhoneNumber(advocate.phoneNumber)}
                           </td>
                         </tr>
                       ))}
