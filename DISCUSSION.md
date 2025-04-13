@@ -12,8 +12,7 @@ This project is split across 4 different PRs, each branching off the previous on
 - Implement automated tests
 
 ### Frontend
-- Add loading states for better user experience
-- Implement error handling and states
+- Add error boundires to ensure app doesn't crash
 - Make the table responsive and mobile-friendly
 - Enhance data fetching with ReactQuery or SSR
 - Refactor the table into its own component
