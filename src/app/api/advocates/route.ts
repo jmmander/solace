@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
     let conditions = undefined;
     
     if (searchTerm) {
-      // Using sql template literals for proper parameterization
       // Specialties is a jsonb array, so we need to search within it
       const specialtiesSearch = sql`EXISTS (
         SELECT 1 FROM jsonb_array_elements_text(${advocates.specialties}) as specialty
@@ -38,7 +37,7 @@ export async function GET(request: NextRequest) {
         sql`${advocates.degree} ILIKE ${'%' + searchTerm + '%'}`,
         specialtiesSearch,
         sql`CAST(${advocates.yearsOfExperience} AS TEXT) ILIKE ${'%' + searchTerm + '%'}`,
-        sql`CAST(${advocates.phoneNumber} AS TEXT) ILIKE ${'%' + searchTerm + '%'}`
+        sql`${advocates.phoneNumber} ILIKE ${'%' + searchTerm + '%'}`
       );
     }
 
