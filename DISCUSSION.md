@@ -2,7 +2,7 @@
 
 Thanks for checking out my code!
 
-This project is split across 4 different PRs, each branching off the previous one. I structured it this way to make the code easily testable and review-friendly. For running the application, I recommend using the `clean-up` branch as it contains all the changes and updates.
+This project is split across 4 different PRs, each branching off the previous one. I structured it this way to make the code easily testable and review-friendly. For running the application, I recommend using the `phone-to-text-migration` branch as it contains all the changes and updates.
 
 ## Future Improvements
 
