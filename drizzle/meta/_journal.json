@@ -15,6 +15,13 @@
       "when": 1744501932155,
       "tag": "0001_change_phone_to_text",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1744665355384,
+      "tag": "0002_fixed_carlie_cooper",
+      "breakpoints": true
     }
   ]
 }
