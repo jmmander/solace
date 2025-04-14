@@ -2,7 +2,7 @@
 
 Thanks for checking out my code!
 
-This project is split across 6 different PRs, each branching off the previous one. I structured it this way to make the code easily testable and review-friendly. For running the application, I recommend using the `ensure-payloads-is-jsonb` branch as it contains all the changes and updates. I also recommend setting up your local the database as this was the experience I optimized for.
+This project is split across 6 different PRs, each branching off the previous one. I structured it this way to make the code easily testable and review-friendly. For running the application, I recommend using the `ensure-payloads-is-jsonb` branch as it contains all the changes and updates. I also recommend running the app with your docker database as this was the experience I optimized for.
 
 ## Future Improvements
 
